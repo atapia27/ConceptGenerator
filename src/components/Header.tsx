@@ -10,7 +10,9 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, className = '' }: HeaderProps) {
   return (
-    <header className={`bg-white border-b border-gray-200 px-6 py-4 h-20 border-l-0 sticky top-0 z-10 ${className}`}>
+    <header
+      className={`sticky top-0 z-10 h-20 border-b border-l-0 border-gray-200 bg-white px-6 py-4 ${className}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div>

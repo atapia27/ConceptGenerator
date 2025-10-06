@@ -25,17 +25,17 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
       case 'audience':
         return {
           title: 'Audience Demographics',
-          subtitle: 'Create targeted audience profiles for marketing campaigns'
+          subtitle: 'Create targeted audience profiles for marketing campaigns',
         };
       case 'concepts':
         return {
           title: 'Creative Concepts',
-          subtitle: 'Generate data-driven advertising concepts'
+          subtitle: 'Generate data-driven advertising concepts',
         };
       default:
         return {
           title: 'Dashboard',
-          subtitle: 'Welcome to your concept generation dashboard'
+          subtitle: 'Welcome to your concept generation dashboard',
         };
     }
   };
@@ -44,28 +44,31 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   const { title, subtitle } = getPageInfo();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
+      <Sidebar
+        isOpen={sidebarOpen}
         onToggleAction={() => setSidebarOpen(!sidebarOpen)}
-        title={currentPage === 'audience' ? 'Audience' : currentPage === 'concepts' ? 'Concepts' : 'Dashboard'}
+        title={
+          currentPage === 'audience'
+            ? 'Audience'
+            : currentPage === 'concepts'
+              ? 'Concepts'
+              : 'Dashboard'
+        }
         currentPage={currentPage}
       />
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+      <div
+        className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}
+      >
         {/* Header */}
-        <Header 
-          title={title}
-          subtitle={subtitle}
-        />
+        <Header title={title} subtitle={subtitle} />
 
         {/* Page Content */}
         <main className="p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {children}
-          </div>
+          <div className="mx-auto max-w-7xl space-y-6">{children}</div>
         </main>
       </div>
     </div>
