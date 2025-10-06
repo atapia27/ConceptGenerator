@@ -1,159 +1,89 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import {
-  Concept,
-  ConceptGenerationResult,
-} from '../types/types';
+import { Concept, ConceptGenerationResult } from '../types/types';
 import { DemographicSelectionData } from '@/features/AudienceDemographicData/types/types';
-import {
-  generateMockConcepts,
-  validateAudienceData,
-} from '../utils/conceptData';
-import { 
-  useGetConcepts,
-  useAddConcepts,
-  useHasConcepts,
-  useHasMoreConcepts,
-  useIsLoadingMoreConcepts,
-  useLoadConcepts,
-  useLoadMoreConcepts,
-  useGetTotalReach,
-  useGetAverageEngagement,
-  useConceptLoading,
-  useConceptError,
-} from '@/stores';
-import { useAIConceptGeneration } from '../../LLM/hooks/useAIConceptGeneration';
+import { useConceptStore } from './useConceptStore';
+import { useConceptGenerationLogic } from './useConceptGenerationLogic';
+import { useConceptMetrics } from './useConceptMetrics';
 
-export function useConceptData(audienceId?: string) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+export interface UseConceptDataOptions {
+  audienceId?: string;
+}
 
-  // Get concepts from store using atomic selectors
-  const getConcepts = useGetConcepts();
-  const addConcepts = useAddConcepts();
-  const hasConcepts = useHasConcepts();
-  const hasMoreConcepts = useHasMoreConcepts();
-  const isLoadingMoreConcepts = useIsLoadingMoreConcepts();
-  const loadConcepts = useLoadConcepts();
-  const loadMoreConcepts = useLoadMoreConcepts();
-  const getTotalReach = useGetTotalReach();
-  const getAverageEngagement = useGetAverageEngagement();
-  const storeLoading = useConceptLoading();
-  const storeError = useConceptError();
+export interface UseConceptDataReturn {
+  concepts: Concept[];
+  isLoading: boolean;
+  error: string | null;
+  validationErrors: string[];
+  generateConcepts: (
+    audienceData: DemographicSelectionData,
+    count?: number,
+    targetAudienceId?: string
+  ) => Promise<ConceptGenerationResult>;
+  loadConceptsForAudience: (audienceId: string) => Promise<void>;
+  loadMoreConceptsForAudience: (audienceId: string) => Promise<void>;
+  hasConcepts: boolean;
+  hasMoreConcepts: boolean;
+  isLoadingMoreConcepts: boolean;
+  totalReach: number;
+  avgEngagement: number;
+  isAIConfigured: boolean;
+}
 
-  // AI concept generation hook
+/**
+ * Main hook for managing concept data - combines store, generation, and metrics
+ */
+export function useConceptData(audienceId?: string): UseConceptDataReturn {
+  // Store interactions
   const {
-    generateConcept: generateAIConcept,
-    isLoading: aiLoading,
-    error: aiError,
-    isConfigured,
-  } = useAIConceptGeneration({
-    fallbackToMock: true,
-  });
+    concepts,
+    hasConcepts,
+    hasMoreConcepts,
+    isLoadingMoreConcepts,
+    totalReach: storeTotalReach,
+    avgEngagement: storeAvgEngagement,
+    storeLoading,
+    storeError,
+    loadConceptsForAudience,
+    loadMoreConceptsForAudience,
+    addConcepts,
+  } = useConceptStore({ audienceId });
 
-  const concepts = audienceId ? getConcepts(audienceId) : [];
+  // Generation logic
+  const {
+    generateConcepts,
+    isLoading: generationLoading,
+    error: generationError,
+    validationErrors,
+    isAIConfigured,
+  } = useConceptGenerationLogic({ addConceptsAction: addConcepts });
 
-  // Load concepts for an audience (lazy loading)
-  const loadConceptsForAudience = useCallback(
-    async (targetAudienceId: string) => {
-      try {
-        await loadConcepts(targetAudienceId, 1, 10);
-      } catch (error) {
-        console.error('Failed to load concepts for audience:', error);
-      }
-    },
-    [loadConcepts]
-  );
+  // Metrics calculations
+  const { totalReach: calculatedReach, avgEngagement: calculatedEngagement } = useConceptMetrics({ concepts });
 
-  // Load more concepts for pagination
-  const loadMoreConceptsForAudience = useCallback(
-    async (targetAudienceId: string) => {
-      try {
-        await loadMoreConcepts(targetAudienceId);
-      } catch (error) {
-        console.error('Failed to load more concepts:', error);
-      }
-    },
-    [loadMoreConcepts]
-  );
+  // Combine loading states
+  const isLoading = generationLoading || storeLoading;
 
-  const generateConcepts = useCallback(
-    async (
-      audienceData: DemographicSelectionData,
-      count: number = 1,
-      targetAudienceId?: string
-    ): Promise<ConceptGenerationResult> => {
-      setIsLoading(true);
-      setError(null);
-      setValidationErrors([]);
+  // Combine error states
+  const error = generationError || storeError;
 
-      try {
-        // Validate audience data
-        const validation = validateAudienceData(audienceData);
-        if (!validation.isValid) {
-          setValidationErrors(validation.errors);
-          return { success: false, concepts: [], error: 'Validation failed' };
-        }
-
-        let generatedConcepts: Concept[] = [];
-
-        if (isConfigured) {
-          // Use AI generation for single concept
-          try {
-            const aiConcept = await generateAIConcept(audienceData);
-            generatedConcepts = [aiConcept];
-          } catch (aiErr) {
-            console.warn('AI generation failed, falling back to mock:', aiErr);
-            // Fallback to mock generation
-            const mockConcepts = generateMockConcepts(audienceData, 1);
-            generatedConcepts = mockConcepts;
-          }
-        } else {
-          // Use mock generation when OpenRouter not configured
-          const mockConcepts = generateMockConcepts(audienceData, count);
-          generatedConcepts = mockConcepts;
-        }
-
-        // Store concepts in the concept store if audienceId is provided
-        if (targetAudienceId) {
-          addConcepts(targetAudienceId, generatedConcepts);
-        }
-
-        return { success: true, concepts: generatedConcepts };
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to generate concepts';
-        setError(errorMessage);
-        return { success: false, concepts: [], error: errorMessage };
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [addConcepts, isConfigured, generateAIConcept]
-  );
-
-
-  // Calculate metrics for the current audience
-  const totalReach = audienceId ? getTotalReach(audienceId) : 0;
-  const avgEngagement = audienceId ? getAverageEngagement(audienceId) : 0;
+  // Use calculated metrics if available, otherwise fall back to store metrics
+  const totalReach = calculatedReach > 0 ? calculatedReach : storeTotalReach;
+  const avgEngagement = calculatedEngagement > 0 ? calculatedEngagement : storeAvgEngagement;
 
   return {
     concepts,
-    isLoading: isLoading || aiLoading || storeLoading,
-    error: error || aiError || storeError,
+    isLoading,
+    error,
     validationErrors,
     generateConcepts,
     loadConceptsForAudience,
     loadMoreConceptsForAudience,
-    hasConcepts: audienceId ? hasConcepts(audienceId) : false,
-    hasMoreConcepts: audienceId ? hasMoreConcepts(audienceId) : false,
-    isLoadingMoreConcepts: audienceId
-      ? isLoadingMoreConcepts(audienceId)
-      : false,
+    hasConcepts,
+    hasMoreConcepts,
+    isLoadingMoreConcepts,
     totalReach,
     avgEngagement,
-    isAIConfigured: isConfigured,
+    isAIConfigured,
   };
 }
