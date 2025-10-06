@@ -1,4 +1,4 @@
-// THIS IS FOR TESTING SUPABASE, NOT RELEVANT TO PROJECT 
+// THIS IS FOR TESTING SUPABASE, NOT RELEVANT TO PROJECT
 import { createClient } from '@/utils/supabase/server';
 
 export default async function Instruments() {
