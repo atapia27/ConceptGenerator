@@ -5,11 +5,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFolderOpen,
   faDownload,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import { SavedAudience } from '@/stores/audienceStore';
 import { CompactAudienceCard } from '@/features/Concept/UI/components/CompactAudienceCard';
 import { DemographicSelectionData } from '../../types/types';
 import Button from '@/components/Button';
+import { useAudienceError } from '@/stores';
 
 interface LoadSavedAudienceProps {
   onLoadAudienceAction: (audience: DemographicSelectionData) => void;
@@ -25,6 +27,7 @@ export function LoadSavedAudience({
   const [selectedAudience, setSelectedAudience] =
     useState<SavedAudience | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const error = useAudienceError();
 
   const handleLoadAudience = () => {
     if (selectedAudience) {
@@ -36,6 +39,7 @@ export function LoadSavedAudience({
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+
       {/* Header */}
       <div className="border-b border-gray-200 p-6">
         <div className="flex items-center justify-between">
@@ -58,10 +62,26 @@ export function LoadSavedAudience({
       </div>
 
       {/* Content */}
+      {error && (
+        <div className="border-b border-red-200 bg-red-50 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FontAwesomeIcon
+                icon={faTimes}
+                className="h-5 w-5 text-red-400"
+              />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isExpanded && (
         <div className="p-6">
           {/* Audience List */}
-          <div className="mb-4 max-h-72 overflow-y-auto rounded-lg border border-gray-200 p-4">
+          <div className="my-4 max-h-[330px] overflow-y-auto rounded-lg border border-gray-200 p-4">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-3">

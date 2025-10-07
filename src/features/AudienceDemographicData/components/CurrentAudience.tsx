@@ -3,7 +3,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faTimes,
   faCheck,
   faDownload,
   faLightbulb,
@@ -11,8 +10,6 @@ import {
 import { DemographicSelectionData } from '../types/types';
 import {
   useAudiences,
-  useAudienceLoading,
-  useAudienceError,
   useGenerateDefaultName,
 } from '@/stores';
 import { SaveAudienceModal } from './SaveAudienceModal';
@@ -34,8 +31,6 @@ export function CurrentAudience({
   isLoading: isGenerating,
 }: CurrentAudienceProps) {
   const audiences = useAudiences();
-  const isLoading = useAudienceLoading();
-  const error = useAudienceError();
   const generateDefaultName = useGenerateDefaultName();
 
   // Use custom hooks for better separation of concerns
@@ -55,21 +50,6 @@ export function CurrentAudience({
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-      {error && (
-        <div className="border-b border-red-200 bg-red-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <FontAwesomeIcon
-                icon={faTimes}
-                className="h-5 w-5 text-red-400"
-              />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="border-b border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -86,15 +66,13 @@ export function CurrentAudience({
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleSaveAudience}
-                disabled={isSaved || isDuplicate || isLoading}
+                disabled={isSaved || isDuplicate}
                 className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                   isSaved
                     ? 'cursor-not-allowed bg-green-100 text-green-800'
                     : isDuplicate
                       ? 'cursor-not-allowed bg-gray-100 text-gray-500'
-                      : isLoading
-                        ? 'cursor-not-allowed bg-gray-300 text-gray-500'
-                        : 'cursor-pointer bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none'
+                      : 'cursor-pointer bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none'
                 }`}
               >
                 {isSaved ? (
@@ -106,11 +84,6 @@ export function CurrentAudience({
                   <>
                     <FontAwesomeIcon icon={faCheck} className="mr-2 h-4 w-4" />
                     Already Saved
-                  </>
-                ) : isLoading ? (
-                  <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                    Saving...
                   </>
                 ) : (
                   <>
