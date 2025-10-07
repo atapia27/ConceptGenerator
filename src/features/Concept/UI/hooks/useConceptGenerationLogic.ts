@@ -10,6 +10,7 @@ import {
   createErrorResult 
 } from '../utils/conceptData';
 import { useAIConceptGeneration } from '../../LLM/hooks/useAIConceptGeneration';
+import { useConceptRemix } from './useConceptRemix';
 
 export interface UseConceptGenerationLogicOptions {
   addConceptsAction: (audienceId: string, concepts: Concept[]) => void;
@@ -19,6 +20,11 @@ export interface UseConceptGenerationLogicReturn {
   generateConcepts: (
     audienceData: DemographicSelectionData,
     count?: number,
+    targetAudienceId?: string
+  ) => Promise<ConceptGenerationResult>;
+  remixConcept: (
+    originalConcept: Concept,
+    audienceData: DemographicSelectionData,
     targetAudienceId?: string
   ) => Promise<ConceptGenerationResult>;
   isLoading: boolean;
@@ -45,6 +51,17 @@ export function useConceptGenerationLogic({
     isConfigured,
   } = useAIConceptGeneration({
     fallbackToMock: true,
+  });
+
+  // Remix hook
+  const {
+    remixConcept: remixConceptLogic,
+    isLoading: remixLoading,
+    error: remixError,
+    validationErrors: remixValidationErrors,
+    isAIConfigured: remixIsConfigured,
+  } = useConceptRemix({
+    addConceptsAction,
   });
 
   const generateConcepts = useCallback(
@@ -102,11 +119,24 @@ export function useConceptGenerationLogic({
     [addConceptsAction, isConfigured, generateAIConcept]
   );
 
+  const remixConcept = useCallback(
+    async (
+      originalConcept: Concept,
+      audienceData: DemographicSelectionData,
+      targetAudienceId?: string
+    ): Promise<ConceptGenerationResult> => {
+      // Use the dedicated remix hook
+      return remixConceptLogic(originalConcept, audienceData, targetAudienceId);
+    },
+    [remixConceptLogic]
+  );
+
   return {
     generateConcepts,
-    isLoading: isLoading || aiLoading,
-    error: error || aiError,
-    validationErrors,
-    isAIConfigured: isConfigured,
+    remixConcept,
+    isLoading: isLoading || aiLoading || remixLoading,
+    error: error || aiError || remixError,
+    validationErrors: [...validationErrors, ...remixValidationErrors],
+    isAIConfigured: isConfigured || remixIsConfigured,
   };
 }

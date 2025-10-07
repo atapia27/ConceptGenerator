@@ -20,6 +20,11 @@ export interface UseConceptDataReturn {
     count?: number,
     targetAudienceId?: string
   ) => Promise<ConceptGenerationResult>;
+  remixConcept: (
+    originalConcept: Concept,
+    audienceData: DemographicSelectionData,
+    targetAudienceId?: string
+  ) => Promise<ConceptGenerationResult>;
   loadConceptsForAudience: (audienceId: string) => Promise<void>;
   loadMoreConceptsForAudience: (audienceId: string) => Promise<void>;
   hasConcepts: boolean;
@@ -52,6 +57,7 @@ export function useConceptData(audienceId?: string): UseConceptDataReturn {
   // Generation logic
   const {
     generateConcepts,
+    remixConcept,
     isLoading: generationLoading,
     error: generationError,
     validationErrors,
@@ -77,6 +83,7 @@ export function useConceptData(audienceId?: string): UseConceptDataReturn {
     error,
     validationErrors,
     generateConcepts,
+    remixConcept,
     loadConceptsForAudience,
     loadMoreConceptsForAudience,
     hasConcepts,

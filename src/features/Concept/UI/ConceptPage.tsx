@@ -50,6 +50,7 @@ export function ConceptPage() {
     isLoading,
     error,
     generateConcepts,
+    remixConcept,
     hasConcepts,
     hasMoreConcepts,
     isLoadingMoreConcepts,
@@ -76,10 +77,11 @@ export function ConceptPage() {
   const isFormValid = !!(currentAudience && selectedAudienceId);
 
   // Concept generation
-  const { generateConceptsForAudience, loadMoreConcepts } = useConceptGeneration({
+  const { generateConceptsForAudience, remixConceptForAudience, loadMoreConcepts } = useConceptGeneration({
     currentAudience,
     selectedAudienceId,
     generateConceptsAction: generateConcepts,
+    remixConceptAction: remixConcept,
     loadMoreConceptsForAudienceAction: loadMoreConceptsForAudience,
   });
 
@@ -171,6 +173,7 @@ export function ConceptPage() {
           hasMoreConcepts={hasMoreConcepts}
           isLoadingMoreConcepts={isLoadingMoreConcepts}
           onUpdateConceptAction={updateConceptData}
+          onRemixConceptAction={remixConceptForAudience}
           onPageChangeAction={conceptPagination.setCurrentPage}
           onPreviousPageAction={conceptPagination.goToPreviousPage}
           onNextPageAction={conceptPagination.goToNextPage}

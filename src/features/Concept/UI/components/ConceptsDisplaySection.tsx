@@ -16,6 +16,7 @@ interface ConceptsDisplaySectionProps {
   hasMoreConcepts: boolean;
   isLoadingMoreConcepts: boolean;
   onUpdateConceptAction: (updatedConcept: Concept) => void;
+  onRemixConceptAction: (concept: Concept) => void;
   onPageChangeAction: (page: number) => void;
   onPreviousPageAction: () => void;
   onNextPageAction: () => void;
@@ -30,6 +31,7 @@ export function ConceptsDisplaySection({
   hasMoreConcepts,
   isLoadingMoreConcepts,
   onUpdateConceptAction: onUpdateConcept,
+  onRemixConceptAction: onRemixConcept,
   onPageChangeAction: onPageChange,
   onPreviousPageAction: onPreviousPage,
   onNextPageAction: onNextPage,
@@ -47,9 +49,10 @@ export function ConceptsDisplaySection({
         key={concept.id}
         concept={concept}
         onUpdate={onUpdateConcept}
+        onRemix={onRemixConcept}
       />
     ));
-  }, [currentConcepts, onUpdateConcept]);
+  }, [currentConcepts, onUpdateConcept, onRemixConcept]);
 
   if (!selectedAudienceId) {
     return (

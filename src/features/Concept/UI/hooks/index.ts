@@ -7,3 +7,4 @@ export { usePagination } from './usePagination';
 export { useDataInitialization } from './useDataInitialization';
 export { useConceptGeneration } from './useConceptGeneration';
 export { useConceptUpdates } from './useConceptUpdates';
+export { useConceptRemix } from './useConceptRemix';

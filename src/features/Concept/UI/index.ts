@@ -3,7 +3,6 @@
 // Shared utilities and types
 export { useConceptData } from './hooks/useConceptData';
 export {
-  generateMockConcepts,
   validateAudienceData,
 } from './utils/conceptData';
 export type {

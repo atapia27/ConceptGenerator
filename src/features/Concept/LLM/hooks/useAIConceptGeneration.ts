@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { ConceptGenerationService } from '../services/conceptGenerationService';
 import { Concept } from '../../UI/types/types';
 import { DemographicSelectionData } from '@/features/AudienceDemographicData/types/types';
-import { isOpenRouterConfigured } from '../config/openRouterConfig';
+import { useAIConfiguration } from './useAIConfiguration';
 
 export interface UseAIConceptGenerationOptions {
   fallbackToMock?: boolean;
@@ -15,6 +15,7 @@ export function useAIConceptGeneration(
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isConfigured } = useAIConfiguration();
 
   const generateConcept = useCallback(
     async (audienceData: DemographicSelectionData): Promise<Concept> => {
@@ -44,6 +45,6 @@ export function useAIConceptGeneration(
     generateConcept,
     isLoading,
     error,
-    isConfigured: isOpenRouterConfigured(),
+    isConfigured,
   };
 }
