@@ -1,61 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { Loader } from './components/results/Loader';
 import { CurrentAudience } from './components/CurrentAudience';
 import { LoadSavedAudience } from './components/selection/LoadSavedAudience';
 import { DemographicSelection } from './components/selection';
 import { useAudienceDataWithSupabase } from './hooks/useAudienceDataWithSupabase';
-import { getRandomDefaultSelections } from './utils/demographicData';
+import { useAudienceForm } from './hooks/useAudienceForm';
 import { DemographicSelectionData } from './types/types';
+import { hasAudienceSelections } from './utils/audienceComparison';
 import { useAudiences, useUpdateCurrentAudience } from '@/stores';
 
 export default function AudiencePage() {
-  const [selections, setSelections] = useState<DemographicSelectionData>({
-    age: '',
-    profession: '',
-    location: '',
-    interests: [],
-    income: '',
-    education: '',
-  });
-
   const { audienceData, isLoading, generateAudienceData } =
     useAudienceDataWithSupabase();
   const audiences = useAudiences();
   const updateCurrentAudience = useUpdateCurrentAudience();
 
+  // Use the new form hook
+  const {
+    selections,
+    updateSelection,
+    updateAllSelections,
+    randomizeSelections,
+  } = useAudienceForm({
+    onSelectionsChange: updateCurrentAudience,
+  });
+
   const handleSelectionChange = (
     variable: keyof DemographicSelectionData,
     value: string | string[]
   ) => {
-    const updatedSelections = {
-      ...selections,
-      [variable]: value,
-    };
-    setSelections(updatedSelections);
-    updateCurrentAudience(updatedSelections);
+    updateSelection(variable, value);
   };
 
-  const handleGenerateAudience = async () => {
+  const handleGenerateAudience = useCallback(async () => {
     await generateAudienceData(selections);
-  };
+  }, [generateAudienceData, selections]);
 
   const handleRandomizeSelections = () => {
-    const randomSelections = getRandomDefaultSelections();
-    setSelections(randomSelections);
-    updateCurrentAudience(randomSelections);
+    randomizeSelections();
   };
 
   const handleLoadAudience = (audienceData: DemographicSelectionData) => {
-    setSelections(audienceData);
-    updateCurrentAudience(audienceData);
-  };
-
-  const hasSelections = () => {
-    return Object.values(selections).some((value) =>
-      Array.isArray(value) ? value.length > 0 : value !== ''
-    );
+    // Update all selections at once using the new method
+    // This ensures atomic updates and proper duplicate detection
+    updateAllSelections(audienceData);
   };
 
   return (
@@ -79,7 +69,7 @@ export default function AudiencePage() {
       </div>
 
       {/* Current Audience Section */}
-      {hasSelections() && (
+      {hasAudienceSelections(selections) && (
         <CurrentAudience
           selections={selections}
           onGenerateAudienceAction={handleGenerateAudience}

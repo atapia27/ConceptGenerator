@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  generateMockAudienceData,
-  validateDemographicSelections,
-} from '../utils/demographicData';
+import { generateMockAudienceData } from '../utils/demographicData';
+import { validateDemographicSelections } from '../utils/audienceValidation';
 import { AudienceData, DemographicSelectionData } from '../types/types';
 import { useSyncWithSupabase } from '@/stores';
 

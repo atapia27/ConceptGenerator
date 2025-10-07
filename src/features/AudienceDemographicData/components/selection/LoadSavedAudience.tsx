@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFolderOpen,
-  faSearch,
   faDownload,
 } from '@fortawesome/free-solid-svg-icons';
 import { SavedAudience } from '@/stores/audienceStore';
@@ -23,31 +22,15 @@ export function LoadSavedAudience({
   audiences,
   isLoading = false,
 }: LoadSavedAudienceProps) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedAudience, setSelectedAudience] =
     useState<SavedAudience | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const filteredAudiences = audiences.filter(
-    (audience) =>
-      audience.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      audience.data.profession
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      audience.data.location
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      audience.data.interests.some((interest) =>
-        interest.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
-
   const handleLoadAudience = () => {
     if (selectedAudience) {
       onLoadAudienceAction(selectedAudience.data);
-      setSelectedAudience(null);
-      setSearchTerm('');
-      setIsExpanded(false);
+      // Keep the section expanded and audience highlighted
+      // Don't clear selectedAudience or collapse the section
     }
   };
 
@@ -77,25 +60,6 @@ export function LoadSavedAudience({
       {/* Content */}
       {isExpanded && (
         <div className="p-6">
-          {/* Search */}
-          <div className="mb-4">
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="h-4 w-4 text-gray-400"
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Search audiences by name, profession, location, or interests..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-10 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
           {/* Audience List */}
           <div className="mb-4 max-h-72 overflow-y-auto rounded-lg border border-gray-200 p-4">
             {isLoading ? (
@@ -105,24 +69,22 @@ export function LoadSavedAudience({
                   <span className="text-gray-600">Loading audiences...</span>
                 </div>
               </div>
-            ) : filteredAudiences.length === 0 ? (
+            ) : audiences.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <FontAwesomeIcon
                   icon={faFolderOpen}
                   className="mb-3 h-8 w-8 text-gray-300"
                 />
                 <h3 className="mb-1 text-sm font-medium text-gray-900">
-                  {searchTerm ? 'No audiences found' : 'No saved audiences'}
+                  No saved audiences
                 </h3>
                 <p className="text-center text-xs text-gray-600">
-                  {searchTerm
-                    ? 'Try adjusting your search terms'
-                    : 'Create and save an audience to see it here'}
+                  Create and save an audience to see it here
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
-                {filteredAudiences.map((audience) => (
+                {audiences.map((audience) => (
                   <CompactAudienceCard
                     key={audience.id}
                     audience={audience}
