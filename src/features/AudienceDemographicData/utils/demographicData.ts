@@ -1,7 +1,6 @@
 import {
   DemographicSelectionData,
   AudienceData,
-  ValidationResult,
   DemographicVariables,
 } from '../types/types';
 
@@ -211,41 +210,6 @@ export const generateMockAudienceData = (
   };
 };
 
-// Utility function to validate demographic selections
-export const validateDemographicSelections = (
-  selections: DemographicSelectionData
-): ValidationResult => {
-  const errors: string[] = [];
+// Note: validateDemographicSelections moved to audienceValidation.ts
 
-  if (!selections.age) errors.push('Age group is required');
-  if (!selections.profession) errors.push('Profession is required');
-  if (!selections.location) errors.push('Location is required');
-  if (!selections.interests || selections.interests.length === 0)
-    errors.push('At least one interest is required');
-  if (!selections.income) errors.push('Income level is required');
-  if (!selections.education) errors.push('Education level is required');
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-};
-
-// Function to generate random default selections
-export const getRandomDefaultSelections = (): DemographicSelectionData => {
-  const getRandomItem = (array: string[]) =>
-    array[Math.floor(Math.random() * array.length)];
-  const getRandomItems = (array: string[], count: number) => {
-    const shuffled = [...array].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
-
-  return {
-    age: getRandomItem(DEMOGRAPHIC_VARIABLES.age),
-    profession: getRandomItem(DEMOGRAPHIC_VARIABLES.profession),
-    location: getRandomItem(DEMOGRAPHIC_VARIABLES.location),
-    interests: getRandomItems(DEMOGRAPHIC_VARIABLES.interests, 3), // Select 3 random interests
-    income: getRandomItem(DEMOGRAPHIC_VARIABLES.income),
-    education: getRandomItem(DEMOGRAPHIC_VARIABLES.education),
-  };
-};
+// Note: getRandomDefaultSelections moved to audienceDataUtils.ts as generateRandomSelections

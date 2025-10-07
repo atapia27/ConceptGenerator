@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faSync } from '@fortawesome/free-solid-svg-icons';
 import { Concept } from '../types/types';
 import { ConceptEditModal } from './ConceptEditModal';
 
@@ -10,12 +10,14 @@ interface ConceptCardProps {
   concept: Concept;
   className?: string;
   onUpdate?: (updatedConcept: Concept) => void;
+  onRemix?: (concept: Concept) => void;
 }
 
 export const ConceptCard = React.memo(function ConceptCard({
   concept,
   className = '',
   onUpdate,
+  onRemix,
 }: ConceptCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const getCategoryColor = (category: string) => {
@@ -54,6 +56,12 @@ export const ConceptCard = React.memo(function ConceptCard({
     setIsEditModalOpen(true);
   };
 
+  const handleRemixClick = () => {
+    if (onRemix) {
+      onRemix(concept);
+    }
+  };
+
   const handleSaveConcept = (updatedConcept: Concept) => {
     if (onUpdate) {
       onUpdate(updatedConcept);
@@ -78,7 +86,17 @@ export const ConceptCard = React.memo(function ConceptCard({
               {concept.category}
             </span>
           </div>
-          <div className="ml-4 flex-shrink-0">
+          <div className="ml-4 flex flex-shrink-0 space-x-2">
+            <button
+              onClick={handleRemixClick}
+              className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-green-100 transition-colors duration-200 hover:bg-green-200"
+              title="Remix concept"
+            >
+              <FontAwesomeIcon
+                icon={faSync}
+                className="h-4 w-4 text-green-600 group-hover:text-green-700"
+              />
+            </button>
             <button
               onClick={handleEditClick}
               className="group flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-blue-100 transition-colors duration-200 hover:bg-blue-200"

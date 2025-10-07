@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTimes,
@@ -13,11 +13,13 @@ import {
   useAudiences,
   useAudienceLoading,
   useAudienceError,
-  useAddAudience,
   useGenerateDefaultName,
 } from '@/stores';
 import { SaveAudienceModal } from './SaveAudienceModal';
-import { areAudiencesEqual } from '../utils/CurrentAudienceHelpers';
+import { useAudienceValidation } from '../hooks/useAudienceValidation';
+import { useAudienceComparison } from '../hooks/useAudienceComparison';
+import { useAudienceSaving } from '../hooks/useAudienceSaving';
+import { useAudienceDuplicateDetection } from '../hooks/useAudienceDuplicateDetection';
 import { CompactAudienceCard } from '@/features/Concept/UI/components/CompactAudienceCard';
 
 interface CurrentAudienceProps {
@@ -31,67 +33,25 @@ export function CurrentAudience({
   onGenerateAudienceAction,
   isLoading: isGenerating,
 }: CurrentAudienceProps) {
-  const [isSaved, setIsSaved] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const audiences = useAudiences();
   const isLoading = useAudienceLoading();
   const error = useAudienceError();
-  const addAudience = useAddAudience();
   const generateDefaultName = useGenerateDefaultName();
 
-  // Find the current audience's name if it exists in saved audiences
-  const getCurrentAudienceName = (): string | null => {
-    const savedAudience = audiences.find(
-      (savedAudience) =>
-        savedAudience &&
-        savedAudience.data &&
-        areAudiencesEqual(selections, savedAudience.data)
-    );
-    return savedAudience ? savedAudience.name : null;
-  };
-
-  const currentAudienceName = getCurrentAudienceName();
-
-  // Check if current selections already exist in saved audiences
-  const isDuplicate = audiences.some(
-    (savedAudience) =>
-      savedAudience &&
-      savedAudience.data &&
-      areAudiencesEqual(selections, savedAudience.data)
-  );
-
-  const handleSaveAudience = () => {
-    if (!isDuplicate) {
-      setShowModal(true);
-    }
-  };
-
-  const handleSaveWithName = async (name: string) => {
-    try {
-      await addAudience(selections, name);
-      setIsSaved(true);
-      // Reset the saved state after 2 seconds
-      setTimeout(() => setIsSaved(false), 2000);
-    } catch (error) {
-      console.error('Failed to save audience:', error);
-      // Handle error - could show a toast notification
-    }
-  };
-
-  const hasSelections = Object.values(selections).some((value) =>
-    Array.isArray(value) ? value.length > 0 : value !== ''
-  );
-
-  const isFormValid = () => {
-    return (
-      selections.age &&
-      selections.profession &&
-      selections.location &&
-      selections.interests.length > 0 &&
-      selections.income &&
-      selections.education
-    );
-  };
+  // Use custom hooks for better separation of concerns
+  const { hasSelections } = useAudienceComparison({ currentSelections: selections });
+  const { isValid: isFormValid } = useAudienceValidation({ selections });
+  const { currentAudienceName, isDuplicate } = useAudienceDuplicateDetection({
+    selections,
+    audiences,
+  });
+  const {
+    isSaved,
+    showModal,
+    handleSaveAudience,
+    handleSaveWithName,
+    closeModal,
+  } = useAudienceSaving({ selections });
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -165,9 +125,9 @@ export function CurrentAudience({
 
               <button
                 onClick={onGenerateAudienceAction}
-                disabled={!isFormValid() || isGenerating}
+                disabled={!isFormValid || isGenerating}
                 className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-                  !isFormValid() || isGenerating
+                  !isFormValid || isGenerating
                     ? 'cursor-not-allowed bg-gray-300 text-gray-500'
                     : 'cursor-pointer bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
                 }`}
@@ -207,7 +167,7 @@ export function CurrentAudience({
       {/* Save Audience Modal */}
       <SaveAudienceModal
         isOpen={showModal}
-        onCloseAction={() => setShowModal(false)}
+        onCloseAction={closeModal}
         onSaveAction={handleSaveWithName}
         audienceData={selections}
         defaultName={generateDefaultName(selections)}
